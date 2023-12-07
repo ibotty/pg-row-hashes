@@ -70,22 +70,23 @@ jobs:
     - name: create debian packages
       run: |
         set -x
-        cargo_name=pg_row_hashes
-        # Extension version and path
-        extension_version=${{ needs.info.outputs.upstream_version }}
-        extension_dir=target/release/${cargo_name}-pg${{ matrix.postgres }}/usr/share/postgresql/${{ matrix.postgres }}/extension
+        package_name="pg-row-hash"
+        extension_name="$(grep '^name ' Cargo.toml | cut -f2 -d'"')"
+        extension_version="$(grep '^version ' Cargo.toml | cut -f2 -d'"')"
+
+        extension_dir=target/release/${extension_name}-pg${{ matrix.postgres }}/usr/share/postgresql/${{ matrix.postgres }}/extension
         # strip the leading v
         deb_version=${extension_version/v/}
 
         # copy schema file to version update sql files
-        # cp ${extension_dir}/${cargo_name}--${deb_version}.sql ${extension_dir}/${cargo_name}--0.1.6--${deb_version}.sql
+        # cp ${extension_dir}/${extension_name}--${deb_version}.sql ${extension_dir}/${extension_name}--0.1.6--${deb_version}.sql
 
         # Create installable package
         mkdir archive
-        cp `find target/release -type f -name "${cargo_name}*"` archive
+        cp `find target/release -type f -name "${extension_name}*"` archive
  
         # name of the package directory before packaging
-        package_dir="${cargo_name}-$extension_version-pg${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu"
+        package_dir="${extension_name}-$extension_version-pg${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu"
 
         # Copy files into directory structure
         mkdir -p ${package_dir}/usr/lib/postgresql/lib
@@ -102,13 +103,13 @@ jobs:
 
         mkdir -p ${package_dir}/usr/share/postgresql/${{ matrix.postgres }}/extension
         cd ${package_dir}/usr/share/postgresql/${{ matrix.postgres }}/extension
-        cp -s ../../../../../var/lib/postgresql/extension/${cargo_name}.control .
-        cp -s ../../../../../var/lib/postgresql/extension/${cargo_name}*.sql .
+        cp -s ../../../../../var/lib/postgresql/extension/${extension_name}.control .
+        cp -s ../../../../../var/lib/postgresql/extension/${extension_name}*.sql .
         cd ../../../../../.. 
 
         mkdir -p ${package_dir}/DEBIAN
         touch ${package_dir}/DEBIAN/control
-        echo 'Package: ${{ env.upstream_repo_repo }}-pg${{ matrix.postgres}}' >> ${package_dir}/DEBIAN/control
+        echo "Package: ${package_name}-pg${{ matrix.postgres}}" >> ${package_dir}/DEBIAN/control
         echo "Version: ${deb_version}" >> ${package_dir}/DEBIAN/control
         echo 'Section: database' >> ${package_dir}/DEBIAN/control
         echo 'Priority: optional' >> ${package_dir}/DEBIAN/control
@@ -119,7 +120,7 @@ jobs:
         # Create deb package
         sudo chown -R root:root ${package_dir}
         sudo chmod -R 00755 ${package_dir}
-        dpkg-deb --build --root-owner-group ${package_dir} ${{ env.upstream_repo_repo }}-pg${{ matrix.postgres }}.deb
+        dpkg-deb --build --root-owner-group ${package_dir} ${package_name}-pg${{ matrix.postgres }}.deb
 
         mkdir -p ./deb-uploads
         find . -name *.deb -exec cp {} ./deb-uploads \;
