@@ -50,6 +50,8 @@ jobs:
 
         sudo apt install -y postgresql-${{ matrix.postgres }} postgresql-server-dev-${{ matrix.postgres }}
 
+        sudo chmod a+rwx $(/usr/lib/postgresql/${{ matrix.postgres }}/bin/pg_config --pkglibdir) $(/usr/lib/postgresql/${{ matrix.postgres }}/bin/pg_config --sharedir)/extension /var/run/postgresql/
+
     - name: install pgrx
       run: |
         pgrx_version="$(cargo tree |grep  ' pgrx ' |head -n 1 | cut -f2 -dv )"
