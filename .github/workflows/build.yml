@@ -11,27 +11,8 @@ on:
   #- cron: '56 0 * * *' # daily
 
 jobs:
-  info:
-    name: Get info on latest upstream and built package
-    runs-on: ubuntu-latest
-    outputs:
-      upstream_version: ${{ steps.get_latest_package.outputs.result }}
-    steps:
-    - name: Get latest package release
-      id: get_latest_package
-      uses: actions/github-script@v6
-      with:
-        retries: 3
-        result-encoding: string
-        script: |
-          return await github.rest.repos.getLatestRelease({
-            owner: "${{ env.upstream_repo_owner }}",
-            repo: "${{ env.upstream_repo_repo }}"
-          }).then(r => r.data.tag_name)
-
   build:
     name: build new packages
-    needs: [info]
     #if: ${{ ! contains(needs.image_tags.outputs.packages, needs.info.outputs.upstream_version) }}
     strategy:
       matrix:
@@ -64,11 +45,15 @@ jobs:
         pgrx_version="$(cargo tree |grep  ' pgrx ' |head -n 1 | cut -f2 -dv )"
         cargo install cargo-pgrx --version "$pgrx_version" --locked
         cargo pgrx init --pg${{ matrix.postgres }}=/usr/lib/postgresql/${{ matrix.postgres }}/bin/pg_config
+
+    - name: run tests
+      run: |
+          cargo pgrx test --no-default-features --features pg${{ matrix.postgres}}
         
     - name: build release artifacts
       run: |
         set -x
-        cargo pgrx package --no-default-features --features pg${{ matrix.postgres }},${{ env.supabase_features }}
+        cargo pgrx package --no-default-features --features pg${{ matrix.postgres }}
 
     - name: create debian packages
       run: |
