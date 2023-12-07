@@ -26,6 +26,7 @@ jobs:
     runs-on: ${{ matrix.box.runner }}
     container:
       image: ghcr.io/${{ github.repository_owner }}/spilo-builder
+      options: --user 1001
     defaults:
       run:
         shell: bash
