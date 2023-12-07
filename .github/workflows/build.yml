@@ -132,7 +132,7 @@ jobs:
       with:
         debug: true
         github_token: ${{ secrets.APT_REPO_TOKEN }}
-        git_repo: ibotty/postgresql-related-packages
+        git_repository: ibotty/postgresql-related-packages
         repo_supported_arch: |
           amd64
         repo_supported_distro: |
