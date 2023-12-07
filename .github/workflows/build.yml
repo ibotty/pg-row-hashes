@@ -70,7 +70,7 @@ jobs:
     - name: create debian package
       run: |
         set -x
-        package_name="pg-row-hash"
+        package_name="pg-row-hashes"
         extension_name="$(grep '^name ' Cargo.toml | cut -f2 -d'"')"
         extension_version="$(grep '^version ' Cargo.toml | cut -f2 -d'"')"
 
