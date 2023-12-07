@@ -60,7 +60,7 @@ jobs:
 
     - name: run tests
       run: |
-          cargo pgrx test --no-default-features --features pg${{ matrix.postgres}}
+          cargo pgrx test -vv --no-default-features --features pg${{ matrix.postgres}}
         
     - name: build release artifacts
       run: |
