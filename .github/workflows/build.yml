@@ -6,6 +6,7 @@ env:
 
 on:
   workflow_dispatch:
+  push:
   # disable for now
   #schedule:
   #- cron: '56 0 * * *' # daily
@@ -29,7 +30,7 @@ jobs:
       run:
         shell: bash
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
