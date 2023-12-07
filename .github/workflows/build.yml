@@ -122,10 +122,10 @@ jobs:
         sudo chmod -R 00755 ${package_dir}
         dpkg-deb --build --root-owner-group ${package_dir} ${package_name}-pg${{ matrix.postgres }}.deb
 
-        mkdir -p ../deb-uploads
-        find . -name *.deb -exec cp {} ../deb-uploads \;
+        mkdir -p deb-uploads
+        find . -name *.deb -exec cp {} ./deb-uploads \;
         echo "found debs:"
-        ls ../deb-uploads -la
+        ls ./deb-uploads -la
 
     - name: update apt repository
       uses: ibotty/apt-repo-update-action@v2
