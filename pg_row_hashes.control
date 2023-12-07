@@ -1,0 +1,5 @@
+comment = 'pg_row_hashes:  Created by pgrx'
+default_version = '@CARGO_VERSION@'
+module_pathname = '$libdir/pg_row_hashes'
+relocatable = false
+superuser = true
