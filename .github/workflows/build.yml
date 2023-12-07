@@ -1,0 +1,142 @@
+---
+name: deb package build
+
+env:
+  SCCACHE_GHA_ENABLED: "true"
+
+on:
+  workflow_dispatch:
+  # disable for now
+  #schedule:
+  #- cron: '56 0 * * *' # daily
+
+jobs:
+  info:
+    name: Get info on latest upstream and built package
+    runs-on: ubuntu-latest
+    outputs:
+      upstream_version: ${{ steps.get_latest_package.outputs.result }}
+    steps:
+    - name: Get latest package release
+      id: get_latest_package
+      uses: actions/github-script@v6
+      with:
+        retries: 3
+        result-encoding: string
+        script: |
+          return await github.rest.repos.getLatestRelease({
+            owner: "${{ env.upstream_repo_owner }}",
+            repo: "${{ env.upstream_repo_repo }}"
+          }).then(r => r.data.tag_name)
+
+  build:
+    name: build new packages
+    needs: [info]
+    #if: ${{ ! contains(needs.image_tags.outputs.packages, needs.info.outputs.upstream_version) }}
+    strategy:
+      matrix:
+        #postgres: [14,15]
+        postgres: ["15"]
+        box:
+          - { runner: ubuntu-latest, arch: amd64 }
+          #- { runner: arm-runner, arch: arm64 }
+
+    runs-on: ${{ matrix.box.runner }}
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/spilo-builder
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    - uses: metalbear-co/sccache-action@v1.1.0
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: Swatinem/rust-cache@v2
+
+    - name: install pgrx
+      run: |
+        set -x
+        pgrx_version="$(cargo tree |grep  ' pgrx ' |head -n 1 | cut -f2 -dv )"
+        cargo install cargo-pgrx --version "$pgrx_version" --locked
+        cargo pgrx init --pg${{ matrix.postgres }}=/usr/lib/postgresql/${{ matrix.postgres }}/bin/pg_config
+        
+    - name: build release artifacts
+      run: |
+        set -x
+        cargo pgrx package --no-default-features --features pg${{ matrix.postgres }},${{ env.supabase_features }}
+
+    - name: create debian packages
+      run: |
+        set -x
+        cargo_name=pg_row_hashes
+        # Extension version and path
+        extension_version=${{ needs.info.outputs.upstream_version }}
+        extension_dir=target/release/${cargo_name}-pg${{ matrix.postgres }}/usr/share/postgresql/${{ matrix.postgres }}/extension
+        # strip the leading v
+        deb_version=${extension_version/v/}
+
+        # copy schema file to version update sql files
+        # cp ${extension_dir}/${cargo_name}--${deb_version}.sql ${extension_dir}/${cargo_name}--0.1.6--${deb_version}.sql
+
+        # Create installable package
+        mkdir archive
+        cp `find target/release -type f -name "${cargo_name}*"` archive
+ 
+        # name of the package directory before packaging
+        package_dir="${cargo_name}-$extension_version-pg${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu"
+
+        # Copy files into directory structure
+        mkdir -p ${package_dir}/usr/lib/postgresql/lib
+        mkdir -p ${package_dir}/var/lib/postgresql/extension
+        cp archive/*.so ${package_dir}/usr/lib/postgresql/lib
+        cp archive/*.control ${package_dir}/var/lib/postgresql/extension
+        cp archive/*.sql ${package_dir}/var/lib/postgresql/extension
+
+        # symlinks to Copy files into directory structure
+        mkdir -p ${package_dir}/usr/lib/postgresql/${{ matrix.postgres }}/lib
+        cd ${package_dir}/usr/lib/postgresql/${{ matrix.postgres }}/lib
+        cp -s ../../lib/*.so .
+        cd ../../../../../..
+
+        mkdir -p ${package_dir}/usr/share/postgresql/${{ matrix.postgres }}/extension
+        cd ${package_dir}/usr/share/postgresql/${{ matrix.postgres }}/extension
+        cp -s ../../../../../var/lib/postgresql/extension/${cargo_name}.control .
+        cp -s ../../../../../var/lib/postgresql/extension/${cargo_name}*.sql .
+        cd ../../../../../.. 
+
+        mkdir -p ${package_dir}/DEBIAN
+        touch ${package_dir}/DEBIAN/control
+        echo 'Package: ${{ env.upstream_repo_repo }}-pg${{ matrix.postgres}}' >> ${package_dir}/DEBIAN/control
+        echo "Version: ${deb_version}" >> ${package_dir}/DEBIAN/control
+        echo 'Section: database' >> ${package_dir}/DEBIAN/control
+        echo 'Priority: optional' >> ${package_dir}/DEBIAN/control
+        echo 'Architecture: ${{ matrix.box.arch }}' >> ${package_dir}/DEBIAN/control
+        echo 'Maintainer: Tobias Florek <tob@butter.sh>' >> ${package_dir}/DEBIAN/control
+        echo 'Description: PostgreSQL extension to compute fingerprints of data' >> ${package_dir}/DEBIAN/control
+
+        # Create deb package
+        chown -R root:root ${package_dir}
+        chmod -R 00755 ${package_dir}
+        dpkg-deb --build --root-owner-group ${package_dir} ${{ env.upstream_repo_repo }}-pg${{ matrix.postgres }}.deb
+
+        mkdir -p ./deb-uploads
+        find . -name *.deb -exec cp {} ./deb-uploads \;
+        echo "found debs:"
+        ls deb-uploads -la
+
+    # - name: update apt repository
+    #   uses: ibotty/apt-repo-update-action@v2
+    #   with:
+    #     debug: true
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     repo_supported_arch: |
+    #       amd64
+    #     repo_supported_distro: |
+    #       jammy
+    #     private_key: ${{ secrets.APT_KEY }}
+    #     update_directory: ../deb-uploads
