@@ -117,8 +117,8 @@ jobs:
         echo 'Description: PostgreSQL extension to compute fingerprints of data' >> ${package_dir}/DEBIAN/control
 
         # Create deb package
-        chown -R root:root ${package_dir}
-        chmod -R 00755 ${package_dir}
+        sudo chown -R root:root ${package_dir}
+        sudo chmod -R 00755 ${package_dir}
         dpkg-deb --build --root-owner-group ${package_dir} ${{ env.upstream_repo_repo }}-pg${{ matrix.postgres }}.deb
 
         mkdir -p ./deb-uploads
