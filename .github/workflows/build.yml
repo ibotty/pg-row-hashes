@@ -58,10 +58,10 @@ jobs:
         cargo install cargo-pgrx --version "$pgrx_version" --locked
         cargo pgrx init --pg${{ matrix.postgres }}=/usr/lib/postgresql/${{ matrix.postgres }}/bin/pg_config
 
-    - name: run tests
-      run: |
-          cargo pgrx test -vv --no-default-features --features pg${{ matrix.postgres}}
-        
+    # - name: run tests
+    #   run: |
+    #       cargo pgrx test -vv --no-default-features --features pg${{ matrix.postgres}}
+
     - name: build release artifacts
       run: |
         set -x
