@@ -67,7 +67,7 @@ jobs:
         set -x
         cargo pgrx package --no-default-features --features pg${{ matrix.postgres }}
 
-    - name: create debian packages
+    - name: create debian package
       run: |
         set -x
         package_name="pg-row-hash"
