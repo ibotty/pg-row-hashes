@@ -11,6 +11,57 @@ pgrx::pg_module_magic!();
 static ZERO_BYTE_ARRAY: [u8; 1] = [0];
 
 #[derive(Clone, Default, PostgresType, Serialize, Deserialize)]
+pub struct SeahashState {
+    data: Vec<String>,
+}
+
+impl SeahashState {
+    #[inline(always)]
+    fn state(
+        mut current: <Self as Aggregate>::State,
+        arg: <Self as Aggregate>::Args,
+    ) -> <Self as Aggregate>::State {
+        // explicitly panic if NULL
+        current.data.push(arg.expect("NULL value given!"));
+        current
+    }
+
+    #[inline(always)]
+    fn finalize(mut current: <Self as Aggregate>::State) -> <Self as Aggregate>::Finalize {
+        let iter = current.data.into_iter();
+        current.data = vec!();
+        seahash_fingerprint(id_iter_to_bytes(iter))
+    }
+}
+
+#[pg_aggregate]
+impl Aggregate for SeahashState {
+    const NAME: &'static str = "seahash_agg";
+    const INITIAL_CONDITION: Option<&'static str> = Some(r#"{ "data": [] }"#);
+    type State = Self;
+    type Args = pgrx::name!(value, Option<String>);
+    type Finalize = i64;
+
+    #[pgrx(parallel_safe, immutable)]
+    fn state(
+        current: <Self as Aggregate>::State,
+        arg: <Self as Aggregate>::Args,
+        _fcinfo: pg_sys::FunctionCallInfo,
+    ) -> <Self as Aggregate>::State {
+        Self::state(current, arg)
+    }
+
+    #[pgrx(parallel_safe, immutable)]
+    fn finalize(
+        current: <Self as Aggregate>::State,
+        _direct_args: Self::OrderedSetArgs,
+        _fcinfo: pg_sys::FunctionCallInfo,
+    ) -> <Self as Aggregate>::Finalize {
+        Self::finalize(current)
+    }
+}
+
+#[derive(Clone, Default, PostgresType, Serialize, Deserialize)]
 pub struct FarmhashState {
     data: Vec<String>,
 }
@@ -510,6 +561,50 @@ mod tests {
     fn pg_test_farmhash_agg_fail_with_null() {
         let _ = Spi::run(&format!(
             "SELECT farmhash_agg(v) FROM UNNEST(ARRAY[{}]) v;",
+             "'a','d',NULL,'b','c'"
+        ));
+    }
+
+    fn seahash_agg(data: Vec<Option<String>>) -> i64 {
+        let mut state = crate::SeahashState::default();
+        for a in data.iter() {
+            state = crate::SeahashState::state(state, a.clone());
+        }
+        crate::SeahashState::finalize(state)
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_checksum_seahash_agg_fails_with_nulls() {
+        let v = vec!(Some('d'.to_string()),None,Some('b'.to_string()));
+        let _ = seahash_agg(v);
+    }
+
+    #[pg_test]
+    fn pg_test_seahash_agg() {
+        for (_, params, _, golden) in ID_GOLDEN_TABLE.iter() {
+            let result = Spi::get_one::<i64>(&format!(
+                "SELECT seahash_agg(v) FROM UNNEST(ARRAY[{}]) v;",
+                params
+            ))
+            .expect("didn't get SPI result")
+            .expect("got None");
+
+            assert_eq!(
+                u64::from_ne_bytes(result.to_ne_bytes()),
+                *golden,
+                "using {}",
+                params
+            );
+        }
+    }
+
+
+    #[pg_test]
+    #[should_panic]
+    fn pg_test_seahash_agg_fail_with_null() {
+        let _ = Spi::run(&format!(
+            "SELECT seahash_agg(v) FROM UNNEST(ARRAY[{}]) v;",
              "'a','d',NULL,'b','c'"
         ));
     }
