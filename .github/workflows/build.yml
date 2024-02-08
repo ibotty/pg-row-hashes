@@ -81,6 +81,7 @@ jobs:
         # copy schema file to version update sql files
          cp ${extension_dir}/${extension_name}--${deb_version}.sql ${extension_dir}/${extension_name}--0.0.0--${deb_version}.sql
          cp ${extension_dir}/${extension_name}--${deb_version}.sql ${extension_dir}/${extension_name}--0.1.0--${deb_version}.sql
+         cp ${extension_dir}/${extension_name}--${deb_version}.sql ${extension_dir}/${extension_name}--0.1.1--${deb_version}.sql
 
         # Create installable package
         mkdir archive
