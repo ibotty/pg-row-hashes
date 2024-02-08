@@ -24,6 +24,7 @@ itertools = "0.12.0"
 md5 = "0.7.0"
 pgrx = "=0.11.3"
 seahash = "4.1.0"
+serde = "1.0.196"
 
 [dev-dependencies]
 pgrx-tests = "=0.11.3"
