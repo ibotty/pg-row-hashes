@@ -257,7 +257,10 @@ mod tests {
         ];
         for (arr, bytes) in table.iter() {
             let arr_iter = arr.iter().map(|s| s.to_string()).map(Option::Some);
-            let result = crate::normalized_pairs_bytes(arr_iter, crate::filter_and_join_tuple_keep_null_values);
+            let result = crate::normalized_pairs_bytes(
+                arr_iter,
+                crate::filter_and_join_tuple_keep_null_values,
+            );
             assert_eq!(result, bytes, "using {:?}", arr);
         }
 
@@ -267,17 +270,36 @@ mod tests {
                 Bytes::from_static(b"a\0\0b\0v2\0c\0"),
             ),
             (
-                vec![Some("c"), Some("v3"), Some("a"), None, Some("b"), Some("v2")],
+                vec![
+                    Some("c"),
+                    Some("v3"),
+                    Some("a"),
+                    None,
+                    Some("b"),
+                    Some("v2"),
+                ],
                 Bytes::from_static(b"a\0\0b\0v2\0c\0v3"),
             ),
             (
-                vec![Some("d"), None, Some("b"), Some("1"), Some("a"), None, Some("c"), Some("3")],
+                vec![
+                    Some("d"),
+                    None,
+                    Some("b"),
+                    Some("1"),
+                    Some("a"),
+                    None,
+                    Some("c"),
+                    Some("3"),
+                ],
                 Bytes::from_static(b"a\0\0b\01\0c\03\0d\0"),
             ),
         ];
         for (arr, bytes) in table.iter() {
             let arr_iter = arr.iter().map(|s| s.map(|s| s.to_string()));
-            let result = crate::normalized_pairs_bytes(arr_iter, crate::filter_and_join_tuple_keep_null_values);
+            let result = crate::normalized_pairs_bytes(
+                arr_iter,
+                crate::filter_and_join_tuple_keep_null_values,
+            );
             assert_eq!(result, bytes, "using {:?}", arr);
         }
     }
@@ -314,11 +336,27 @@ mod tests {
                 Bytes::from_static(b"c\0v3"),
             ),
             (
-                vec![Some("c"), Some("v3"), Some("a"), None, Some("b"), Some("v2")],
+                vec![
+                    Some("c"),
+                    Some("v3"),
+                    Some("a"),
+                    None,
+                    Some("b"),
+                    Some("v2"),
+                ],
                 Bytes::from_static(b"b\0v2\0c\0v3"),
             ),
             (
-                vec![Some("d"), None, Some("b"), Some("1"), Some("a"), None, Some("c"), Some("3")],
+                vec![
+                    Some("d"),
+                    None,
+                    Some("b"),
+                    Some("1"),
+                    Some("a"),
+                    None,
+                    Some("c"),
+                    Some("3"),
+                ],
                 Bytes::from_static(b"b\01\0c\03"),
             ),
         ];
@@ -344,7 +382,6 @@ mod tests {
             assert_eq!(result, *golden, "using {}", params);
         }
     }
-
 
     #[pg_test]
     fn pg_test_id_underscore_md5() {
@@ -384,7 +421,12 @@ mod tests {
                 .expect("didn't get SPI result")
                 .expect("got None");
 
-            assert_eq!(u128::from_le_bytes(*result.as_bytes()), *golden, "using {}", params);
+            assert_eq!(
+                u128::from_le_bytes(*result.as_bytes()),
+                *golden,
+                "using {}",
+                params
+            );
         }
     }
 
@@ -395,28 +437,45 @@ mod tests {
                 .expect("didn't get SPI result")
                 .expect("got None");
 
-            assert_eq!(u64::from_ne_bytes(result.to_ne_bytes()), *golden, "using {}", params);
+            assert_eq!(
+                u64::from_ne_bytes(result.to_ne_bytes()),
+                *golden,
+                "using {}",
+                params
+            );
         }
     }
     #[pg_test]
     fn pg_test_checksum_farmhash_extendable() {
         for (params, golden, _, _, _) in CHECKSUM_GOLDEN_TABLE.iter() {
-            let result = Spi::get_one::<Uuid>(&format!("SELECT checksum_farmhash_extendable({});", params))
-                .expect("didn't get SPI result")
-                .expect("got None");
+            let result =
+                Spi::get_one::<Uuid>(&format!("SELECT checksum_farmhash_extendable({});", params))
+                    .expect("didn't get SPI result")
+                    .expect("got None");
 
-            assert_eq!(u128::from_le_bytes(*result.as_bytes()), *golden, "using {}", params);
+            assert_eq!(
+                u128::from_le_bytes(*result.as_bytes()),
+                *golden,
+                "using {}",
+                params
+            );
         }
     }
 
     #[pg_test]
     fn pg_test_checksum_seahash_extendable() {
         for (params, _, golden, _, _) in CHECKSUM_GOLDEN_TABLE.iter() {
-            let result = Spi::get_one::<i64>(&format!("SELECT checksum_seahash_extendable({});", params))
-                .expect("didn't get SPI result")
-                .expect("got None");
+            let result =
+                Spi::get_one::<i64>(&format!("SELECT checksum_seahash_extendable({});", params))
+                    .expect("didn't get SPI result")
+                    .expect("got None");
 
-            assert_eq!(u64::from_ne_bytes(result.to_ne_bytes()), *golden, "using {}", params);
+            assert_eq!(
+                u64::from_ne_bytes(result.to_ne_bytes()),
+                *golden,
+                "using {}",
+                params
+            );
         }
     }
 }
