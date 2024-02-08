@@ -112,7 +112,7 @@ impl Aggregate for FarmhashState {
     }
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of strings into a md5 using md5 with _ as separator.
 pub fn id_underscore_md5(a: VariadicArray<String>) -> Uuid {
     let res = a.iter_deny_null().collect::<Vec<String>>().join("_");
@@ -120,19 +120,19 @@ pub fn id_underscore_md5(a: VariadicArray<String>) -> Uuid {
     Uuid::from_bytes(digest.0)
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of strings into a Uuid using farmhash's fingerprint128
 pub fn id_farmhash(a: VariadicArray<String>) -> Uuid {
     farmhash_fingerprint(ids_to_bytes(a))
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of strings into a bigint using seahash
 pub fn id_seahash(a: VariadicArray<String>) -> i64 {
     seahash_fingerprint(ids_to_bytes(a))
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using farmhash's fingerprint128
 pub fn checksum_farmhash(a: VariadicArray<String>) -> Uuid {
     assert!(a.len() % 2 == 0);
@@ -140,7 +140,7 @@ pub fn checksum_farmhash(a: VariadicArray<String>) -> Uuid {
     farmhash_fingerprint(b)
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using farmhash's fingerprint128, skipping NULL values
 pub fn checksum_farmhash_extendable(a: VariadicArray<String>) -> Uuid {
     assert!(a.len() % 2 == 0);
@@ -148,7 +148,7 @@ pub fn checksum_farmhash_extendable(a: VariadicArray<String>) -> Uuid {
     farmhash_fingerprint(b)
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using seahash.
 pub fn checksum_seahash(a: VariadicArray<String>) -> i64 {
     assert!(a.len() % 2 == 0);
@@ -156,7 +156,7 @@ pub fn checksum_seahash(a: VariadicArray<String>) -> i64 {
     seahash_fingerprint(b)
 }
 
-#[pg_extern(strict, immutable, parallel_safe)]
+#[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using seahash, skipping NULL values.
 pub fn checksum_seahash_extendable(a: VariadicArray<String>) -> i64 {
     assert!(a.len() % 2 == 0);
