@@ -1,3 +1,5 @@
+mod xor_agg;
+
 use std::cmp::Ordering;
 
 use bytes::{BufMut, Bytes, BytesMut};

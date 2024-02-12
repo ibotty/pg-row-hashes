@@ -13,3 +13,4 @@ It provides [seahash](https://ticki.github.io/blog/seahash-explained/) and [farm
 
 Seahash will return a `BIGINT` (64 bit) and Farmhash a `UUID` (128 bit).
 
+It also provides a `bit_xor` aggregate for `UUID`.
