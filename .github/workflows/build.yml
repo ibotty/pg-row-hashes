@@ -84,9 +84,14 @@ jobs:
          cp ${extension_dir}/${extension_name}--${deb_version}.sql ${extension_dir}/${extension_name}--0.1.1--${deb_version}.sql
          cp ${extension_dir}/${extension_name}--${deb_version}.sql ${extension_dir}/${extension_name}--0.1.2--${deb_version}.sql
 
+        # copy local sql files
+        if [ "$(find sql -mindepth 1 -maxdepth 1 -name \*.sql)" ]; then
+          cp sql/*.sql ${extension_dir}
+        fi
+
         # Create installable package
         mkdir archive
-        cp `find target/release -type f -name "${extension_name}*"` archive
+        cp $(find target/release -type f -name "${extension_name}*") archive
  
         # name of the package directory before packaging
         package_dir="${extension_name}-$extension_version-pg${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu"
