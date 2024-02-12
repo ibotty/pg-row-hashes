@@ -149,10 +149,10 @@ DROP FUNCTION IF EXISTS seahashstate_in_old(cstring);
 DROP FUNCTION IF EXISTS seahashstate_out(seahashstate);
 DROP FUNCTION IF EXISTS seahashstate_out(seahashstate_old);
 
-DROP AGGREGATE IF EXISTS farmhash_agg;
-DROP AGGREGATE IF EXISTS seahash_agg;
+DROP AGGREGATE IF EXISTS farmhash_agg(text);
+DROP AGGREGATE IF EXISTS seahash_agg(text);
 
-DROP TYPE IF EXISTS seahash_state;
-DROP TYPE IF EXISTS seahash_state_old;
-DROP TYPE IF EXISTS farmhash_state;
-DROP TYPE IF EXISTS farmhash_state_old;
+DROP TYPE IF EXISTS seahashstate;
+DROP TYPE IF EXISTS seahashstate_old;
+DROP TYPE IF EXISTS farmhashstate;
+DROP TYPE IF EXISTS farmhashstate_old;
