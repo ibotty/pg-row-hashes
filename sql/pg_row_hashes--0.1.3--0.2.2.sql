@@ -127,30 +127,28 @@ IMMUTABLE STRICT PARALLEL SAFE
 LANGUAGE c /* Rust */
 AS 'MODULE_PATHNAME', 'checksum_farmhash_wrapper';
 
-DROP FUNCTION IF EXISTS farmhash_agg(text);
-DROP FUNCTION IF EXISTS farmhash_agg_old(text);
-DROP FUNCTION IF EXISTS farmhash_state_finalize(this farmhashstate);
-DROP FUNCTION IF EXISTS farmhash_state_finalize(this farmhashstate_old);
-DROP FUNCTION IF EXISTS farmhash_state_state(this farmhashstate, text);
-DROP FUNCTION IF EXISTS farmhash_state_state(this farmhashstate_old, text);
-DROP FUNCTION IF EXISTS farmhashstate_in(cstring);
-DROP FUNCTION IF EXISTS farmhashstate_in_old(cstring);
-DROP FUNCTION IF EXISTS farmhashstate_out(farmhashstate);
-DROP FUNCTION IF EXISTS farmhashstate_out(farmhashstate_old);
-
-DROP FUNCTION IF EXISTS seahash_agg(text);
-DROP FUNCTION IF EXISTS seahash_agg_old(text);
-DROP FUNCTION IF EXISTS seahash_state_finalize(this seahashstate);
-DROP FUNCTION IF EXISTS seahash_state_finalize(this seahashstate_old);
-DROP FUNCTION IF EXISTS seahash_state_state(this seahashstate, text);
-DROP FUNCTION IF EXISTS seahash_state_state(this seahashstate_old, text);
-DROP FUNCTION IF EXISTS seahashstate_in(cstring);
-DROP FUNCTION IF EXISTS seahashstate_in_old(cstring);
-DROP FUNCTION IF EXISTS seahashstate_out(seahashstate);
-DROP FUNCTION IF EXISTS seahashstate_out(seahashstate_old);
+--DROP FUNCTION IF EXISTS farmhash_state_finalize(this farmhashstate);
+--DROP FUNCTION IF EXISTS farmhash_state_finalize(this farmhashstate_old);
+--DROP FUNCTION IF EXISTS farmhash_state_state(this farmhashstate, text);
+--DROP FUNCTION IF EXISTS farmhash_state_state(this farmhashstate_old, text);
+--DROP FUNCTION IF EXISTS farmhashstate_in(cstring);
+--DROP FUNCTION IF EXISTS farmhashstate_in_old(cstring);
+--DROP FUNCTION IF EXISTS farmhashstate_out(farmhashstate);
+--DROP FUNCTION IF EXISTS farmhashstate_out(farmhashstate_old);
+--
+--DROP FUNCTION IF EXISTS seahash_state_finalize(this seahashstate);
+--DROP FUNCTION IF EXISTS seahash_state_finalize(this seahashstate_old);
+--DROP FUNCTION IF EXISTS seahash_state_state(this seahashstate, text);
+--DROP FUNCTION IF EXISTS seahash_state_state(this seahashstate_old, text);
+--DROP FUNCTION IF EXISTS seahashstate_in(cstring);
+--DROP FUNCTION IF EXISTS seahashstate_in_old(cstring);
+--DROP FUNCTION IF EXISTS seahashstate_out(seahashstate);
+--DROP FUNCTION IF EXISTS seahashstate_out(seahashstate_old);
 
 DROP AGGREGATE IF EXISTS farmhash_agg(text);
 DROP AGGREGATE IF EXISTS seahash_agg(text);
+DROP AGGREGATE IF EXISTS farmhash_agg_old(text);
+DROP AGGREGATE IF EXISTS seahash_agg_old(text);
 
 DROP TYPE IF EXISTS seahashstate;
 DROP TYPE IF EXISTS seahashstate_old;
