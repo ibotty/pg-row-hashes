@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         #postgres: [14,15]
-        postgres: ["15"]
+        postgres: ["15", "16"]
         box:
           - { runner: ubuntu-latest, arch: amd64 }
           #- { runner: arm-runner, arch: arm64 }
