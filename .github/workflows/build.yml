@@ -95,7 +95,7 @@ jobs:
         # Create installable package
         mkdir archive
         cp $(find target/release -type f -name "${extension_name}*") archive
- 
+
         # name of the package directory before packaging
         package_dir="${extension_name}-$extension_version-pg${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu"
 
@@ -116,7 +116,7 @@ jobs:
         cd ${package_dir}/usr/share/postgresql/${{ matrix.postgres }}/extension
         cp -s ../../../../../var/lib/postgresql/extension/${extension_name}.control .
         cp -s ../../../../../var/lib/postgresql/extension/${extension_name}*.sql .
-        cd ../../../../../.. 
+        cd ../../../../../..
 
         mkdir -p ${package_dir}/DEBIAN
         touch ${package_dir}/DEBIAN/control
@@ -140,6 +140,8 @@ jobs:
 
     - name: update apt repository
       uses: ibotty/apt-repo-update-action@v2
+      concurrency:
+        group: apt-repo-update
       with:
         debug: true
         github_token: ${{ secrets.APT_REPO_TOKEN }}
