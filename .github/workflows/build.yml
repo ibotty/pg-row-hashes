@@ -14,6 +14,8 @@ on:
 jobs:
   build:
     name: build new packages
+    concurrency:
+      group: apt-repo-update
     #if: ${{ ! contains(needs.image_tags.outputs.packages, needs.info.outputs.upstream_version) }}
     strategy:
       matrix:
@@ -140,8 +142,6 @@ jobs:
 
     - name: update apt repository
       uses: ibotty/apt-repo-update-action@v2
-      concurrency:
-        group: apt-repo-update
       with:
         debug: true
         github_token: ${{ secrets.APT_REPO_TOKEN }}
