@@ -20,18 +20,29 @@ pub fn id_underscore_md5(a: VariadicArray<String>) -> Uuid {
     Uuid::from_bytes(digest.0)
 }
 
-#[pg_extern(strict, immutable, parallel_safe, create_or_replace, name="id_farmhash")]
+#[pg_extern(
+    strict,
+    immutable,
+    parallel_safe,
+    create_or_replace,
+    name = "id_farmhash"
+)]
 /// Hash a variadic array of strings into a Uuid using farmhash's fingerprint128
 pub fn id_farmhash_bytea(bytes: Vec<u8>) -> Uuid {
     farmhash_fingerprint(bytes.into())
 }
 
-#[pg_extern(strict, immutable, parallel_safe, create_or_replace, name="id_seahash")]
+#[pg_extern(
+    strict,
+    immutable,
+    parallel_safe,
+    create_or_replace,
+    name = "id_seahash"
+)]
 /// Hash a variadic array of strings into a Uuid using farmhash's fingerprint128
 pub fn id_seahash_bytea(bytes: Vec<u8>) -> i64 {
     seahash_fingerprint(bytes.into())
 }
-
 
 #[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of strings into a Uuid using farmhash's fingerprint128
