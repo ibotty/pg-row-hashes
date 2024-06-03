@@ -28,32 +28,57 @@ where
     s
 }
 
-#[pg_extern(name = "array_union")]
-#[pgrx(parallel_safe, immutable, strict, create_or_replace)]
+#[pg_extern(
+    name = "array_union",
+    parallel_safe,
+    immutable,
+    strict,
+    create_or_replace
+)]
 fn array_union_uuid<'a>(a: Array<'a, Uuid>, b: Array<'a, Uuid>) -> Vec<Uuid> {
     array_union_generic(a, b)
 }
 
-#[pg_extern(name = "array_union")]
-#[pgrx(parallel_safe, immutable, strict, create_or_replace)]
+#[pg_extern(
+    name = "array_union",
+    parallel_safe,
+    immutable,
+    strict,
+    create_or_replace
+)]
 fn array_union_text<'a>(a: Array<'a, &'a str>, b: Array<'a, &'a str>) -> Vec<&'a str> {
     array_union_generic(a, b)
 }
 
-#[pg_extern(name = "array_union")]
-#[pgrx(parallel_safe, immutable, strict, create_or_replace)]
+#[pg_extern(
+    name = "array_union",
+    parallel_safe,
+    immutable,
+    strict,
+    create_or_replace
+)]
 fn array_union_i64<'a>(a: Array<'a, i64>, b: Array<'a, i64>) -> Vec<i64> {
     array_union_generic(a, b)
 }
 
-#[pg_extern(name = "array_union")]
-#[pgrx(parallel_safe, immutable, strict, create_or_replace)]
+#[pg_extern(
+    name = "array_union",
+    parallel_safe,
+    immutable,
+    strict,
+    create_or_replace
+)]
 fn array_union_i32<'a>(a: Array<'a, i32>, b: Array<'a, i32>) -> Vec<i32> {
     array_union_generic(a, b)
 }
 
-#[pg_extern]
-#[pgrx(parallel_safe, immutable, strict, create_or_replace)]
+#[pg_extern(
+    name = "array_union",
+    parallel_safe,
+    immutable,
+    strict,
+    create_or_replace
+)]
 fn array_union_sorted<'a>(a: Array<'a, Uuid>, b: Array<'a, Uuid>) -> Vec<Uuid> {
     array_union_generic_sorted(a, b)
 }
