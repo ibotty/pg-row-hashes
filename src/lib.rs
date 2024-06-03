@@ -1,3 +1,4 @@
+mod array_functions;
 mod xor_agg;
 
 use std::cmp::Ordering;
