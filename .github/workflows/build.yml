@@ -79,15 +79,17 @@ jobs:
         extension_dir=target/release/${extension_name}-pg${{ matrix.postgres }}/usr/share/postgresql/${{ matrix.postgres }}/extension
         # strip the leading v
         deb_version=${extension_version/v/}
+
         sql_schema_file="$extension_dir/$extension_name--$deb_version.sql"
 
         sed -i 's/CREATE AGGREGATE/CREATE OR REPLACE AGGREGATE/' "$sql_schema_file"
 
-        # copy schema file to version update sql files
-         cp "$sql_schema_file" "${extension_dir}/${extension_name}--0.0.0--${deb_version}.sql"
-         cp "$sql_schema_file" "${extension_dir}/${extension_name}--0.1.0--${deb_version}.sql"
-         cp "$sql_schema_file" "${extension_dir}/${extension_name}--0.1.1--${deb_version}.sql"
-         cp "$sql_schema_file" "${extension_dir}/${extension_name}--0.1.2--${deb_version}.sql"
+        # copy schema file to version update sql files for all prior patch versions
+        IFS=. read -r -a version_array <<< "$deb_version"
+        major=${version_array[0]} minor=${version_array[1]} patch=${version_array[2]}
+        for patch in $(seq 0 $((patch-1)) ); do
+          cp "$sql_schema_file" "${extension_dir}/${extension_name}--${major}.${minor}.${patch}--${deb_version}.sql"
+        done
 
         # copy local sql files
         if [ "$(find sql -mindepth 1 -maxdepth 1 -name \*.sql)" ]; then
