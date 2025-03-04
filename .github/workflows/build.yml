@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         #postgres: [14,15]
-        postgres: ["15", "16"]
+        postgres: ["17", "16"]
         box:
           - { runner: ubuntu-latest, arch: amd64 }
           #- { runner: arm-runner, arch: arm64 }
@@ -151,6 +151,6 @@ jobs:
         repo_supported_arch: |
           amd64
         repo_supported_distro: |
-          jammy
+          bookworm
         private_key: ${{ secrets.APT_KEY }}
         update_directory: ../deb-uploads
