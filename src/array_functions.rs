@@ -10,8 +10,8 @@ where
     T: Eq + std::hash::Hash,
 {
     // silently discard NULLs
-    let mut a: HashSet<_> = a.into_iter().filter_map(|x| x).collect();
-    let b_iter = b.into_iter().filter_map(|x| x);
+    let mut a: HashSet<_> = a.into_iter().flatten().collect();
+    let b_iter = b.into_iter().flatten();
     a.extend(b_iter);
     a.into_iter().collect()
 }

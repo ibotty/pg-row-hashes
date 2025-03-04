@@ -145,7 +145,7 @@ fn filter_and_join_tuple_keep_null_values((a, b): (Option<Bytes>, Option<Bytes>)
 }
 
 #[inline]
-fn normalized_pairs_bytes<T: Iterator, F>(a: T, f: F) -> Bytes
+fn normalized_pairs_bytes<T, F>(a: T, f: F) -> Bytes
 where
     T: Iterator<Item = Option<String>>,
     F: FnMut((Option<Bytes>, Option<Bytes>)) -> Option<Bytes>,
