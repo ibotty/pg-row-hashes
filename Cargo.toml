@@ -5,7 +5,11 @@ edition = "2021"
 repository = "https://github.com/ibotty/pg-row-hashes"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "pgrx_embed_pg_row_hashes"
+path = "./src/bin/pgrx_embed.rs"
 
 [features]
 default = ["pg17"]
