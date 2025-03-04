@@ -46,7 +46,7 @@ fn array_union_uuid<'a>(a: Array<'a, Uuid>, b: Array<'a, Uuid>) -> Vec<Uuid> {
     strict,
     create_or_replace
 )]
-fn array_union_text<'a>(a: Array<'a, &'a str>, b: Array<'a, &'a str>) -> Vec<&'a str> {
+fn array_union_text(a: Array<String>, b: Array<String>) -> Vec<String> {
     array_union_generic(a, b)
 }
 
