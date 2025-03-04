@@ -148,6 +148,7 @@ jobs:
         debug: true
         github_token: ${{ secrets.APT_REPO_TOKEN }}
         git_repository: ibotty/postgresql-related-packages
+        git_push_branch: apt-repo
         repo_supported_arch: |
           amd64
         repo_supported_distro: |
