@@ -73,7 +73,7 @@ jobs:
       run: |
         set -x
         package_name="pg-row-hashes"
-        extension_name="$(grep '^name ' Cargo.toml | cut -f2 -d'"')"
+        extension_name="$(grep '^name ' Cargo.toml | cut -f2 -d'"' | head -n 1)"
         extension_version="$(grep '^version ' Cargo.toml | cut -f2 -d'"')"
 
         extension_dir=target/release/${extension_name}-pg${{ matrix.postgres }}/usr/share/postgresql/${{ matrix.postgres }}/extension
