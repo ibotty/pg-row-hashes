@@ -8,26 +8,23 @@ repository = "https://github.com/ibotty/pg-row-hashes"
 crate-type = ["cdylib"]
 
 [features]
-default = ["pg15"]
-pg11 = ["pgrx/pg11", "pgrx-tests/pg11" ]
-pg12 = ["pgrx/pg12", "pgrx-tests/pg12" ]
-pg13 = ["pgrx/pg13", "pgrx-tests/pg13" ]
-pg14 = ["pgrx/pg14", "pgrx-tests/pg14" ]
+default = ["pg17"]
 pg15 = ["pgrx/pg15", "pgrx-tests/pg15" ]
 pg16 = ["pgrx/pg16", "pgrx-tests/pg16" ]
+pg17 = ["pgrx/pg17", "pgrx-tests/pg17" ]
 pg_test = []
 
 [dependencies]
 bytes = "1"
 fasthash = "0.4.0"
-itertools = "0.13.0"
+itertools = "0.14.0"
 md5 = "0.7.0"
-pgrx = "=0.11.4"
+pgrx = "=0.13.1"
 seahash = "4.1.0"
 serde = "1.0.196"
 
 [dev-dependencies]
-pgrx-tests = "=0.11.4"
+pgrx-tests = "=0.13.1"
 
 [profile.dev]
 panic = "unwind"
