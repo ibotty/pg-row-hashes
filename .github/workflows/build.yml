@@ -14,8 +14,11 @@ on:
 jobs:
   build:
     name: build new packages
-    concurrency:
-      group: apt-repo-update
+
+    ## disabling for now, because it also caused problems
+    # concurrency:
+    #   group: apt-repo-update
+    
     #if: ${{ ! contains(needs.image_tags.outputs.packages, needs.info.outputs.upstream_version) }}
     strategy:
       matrix:
