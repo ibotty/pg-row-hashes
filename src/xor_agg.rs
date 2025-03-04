@@ -1,13 +1,10 @@
 use pgrx::{prelude::*, Aggregate, Uuid};
 
-pub struct XorAggUuidState { }
+pub struct XorAggUuidState {}
 
 impl XorAggUuidState {
     #[inline(always)]
-    fn combine(
-        current: Uuid,
-        arg: Uuid,
-    ) -> Uuid {
+    fn combine(current: Uuid, arg: Uuid) -> Uuid {
         let new = u128::from_ne_bytes(*arg.as_bytes());
         let old = u128::from_ne_bytes(*current.as_bytes());
         Uuid::from_bytes((old ^ new).to_ne_bytes())
@@ -29,11 +26,7 @@ impl Aggregate for XorAggUuidState {
     const PARALLEL: Option<ParallelOption> = Some(ParallelOption::Safe);
 
     #[pgrx(parallel_safe, immutable, strict, create_or_replace)]
-    fn state(
-        current: Uuid,
-        arg: Uuid,
-        _fcinfo: pg_sys::FunctionCallInfo,
-    ) -> Uuid {
+    fn state(current: Uuid, arg: Uuid, _fcinfo: pg_sys::FunctionCallInfo) -> Uuid {
         Self::combine(current, arg)
     }
 
