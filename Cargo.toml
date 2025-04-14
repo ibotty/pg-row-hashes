@@ -28,7 +28,7 @@ seahash = "4.1.0"
 serde = "1.0.196"
 
 [dev-dependencies]
-pgrx-tests = "=0.13.1"
+pgrx-tests = "=0.14.1"
 
 [profile.dev]
 panic = "unwind"
