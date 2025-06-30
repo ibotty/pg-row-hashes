@@ -22,7 +22,7 @@ pg_test = []
 bytes = "1"
 fasthash = "0.4.0"
 itertools = "0.14.0"
-md5 = "0.7.0"
+md5 = "0.8.0"
 pgrx = "=0.13.1"
 seahash = "4.1.0"
 serde = "1.0.196"
