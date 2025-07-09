@@ -28,59 +28,44 @@ where
     s
 }
 
-#[pg_extern(
-    name = "array_union",
-    parallel_safe,
-    immutable,
-    strict,
-    create_or_replace
-)]
-fn array_union_uuid<'a>(a: Array<'a, Uuid>, b: Array<'a, Uuid>) -> Vec<Uuid> {
-    array_union_generic(a, b)
+#[pg_extern(name = "array_union", parallel_safe, immutable, create_or_replace)]
+fn array_union_uuid(a: Option<Vec<Option<Uuid>>>, b: Option<Vec<Option<Uuid>>>) -> Vec<Uuid> {
+    array_union_generic(
+        a.unwrap_or_default(),
+        b.unwrap_or_default(),
+    )
 }
 
-#[pg_extern(
-    name = "array_union",
-    parallel_safe,
-    immutable,
-    strict,
-    create_or_replace
-)]
-fn array_union_text(a: Array<String>, b: Array<String>) -> Vec<String> {
-    array_union_generic(a, b)
+#[pg_extern(name = "array_union", parallel_safe, immutable, create_or_replace)]
+fn array_union_text(a: Option<Vec<Option<String>>>, b: Option<Vec<Option<String>>>) -> Vec<String> {
+    array_union_generic(
+        a.unwrap_or_default(),
+        b.unwrap_or_default(),
+    )
 }
 
-#[pg_extern(
-    name = "array_union",
-    parallel_safe,
-    immutable,
-    strict,
-    create_or_replace
-)]
-fn array_union_i64<'a>(a: Array<'a, i64>, b: Array<'a, i64>) -> Vec<i64> {
-    array_union_generic(a, b)
+#[pg_extern(name = "array_union", parallel_safe, immutable, create_or_replace)]
+fn array_union_i64(a: Option<Vec<Option<i64>>>, b: Option<Vec<Option<i64>>>) -> Vec<i64> {
+    array_union_generic(
+        a.unwrap_or_default(),
+        b.unwrap_or_default(),
+    )
 }
 
-#[pg_extern(
-    name = "array_union",
-    parallel_safe,
-    immutable,
-    strict,
-    create_or_replace
-)]
-fn array_union_i32<'a>(a: Array<'a, i32>, b: Array<'a, i32>) -> Vec<i32> {
-    array_union_generic(a, b)
+#[pg_extern(name = "array_union", parallel_safe, immutable, create_or_replace)]
+fn array_union_i32(a: Option<Vec<Option<i32>>>, b: Option<Vec<Option<i32>>>) -> Vec<i32> {
+    array_union_generic(
+        a.unwrap_or_default(),
+        b.unwrap_or_default(),
+    )
 }
 
-#[pg_extern(
-    name = "array_union",
-    parallel_safe,
-    immutable,
-    strict,
-    create_or_replace
-)]
-fn array_union_sorted<'a>(a: Array<'a, Uuid>, b: Array<'a, Uuid>) -> Vec<Uuid> {
-    array_union_generic_sorted(a, b)
+#[pg_extern(name = "array_union", parallel_safe, immutable, create_or_replace)]
+fn array_union_sorted(a: Option<Vec<Option<Uuid>>>, b: Option<Vec<Option<Uuid>>>) -> Vec<Uuid> {
+    array_union_generic_sorted(
+        a.unwrap_or_default(),
+        b.unwrap_or_default(),
+    )
 }
 
 #[cfg(test)]
