@@ -59,7 +59,7 @@ pub fn id_seahash(a: VariadicArray<String>) -> i64 {
 #[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using farmhash's fingerprint128
 pub fn checksum_farmhash(a: VariadicArray<String>) -> Uuid {
-    assert!(a.len() % 2 == 0);
+    assert!(a.len().is_multiple_of(2));
     let b = normalized_pairs_bytes(a.iter(), filter_and_join_tuple_keep_null_values);
     farmhash_fingerprint(b)
 }
@@ -67,7 +67,7 @@ pub fn checksum_farmhash(a: VariadicArray<String>) -> Uuid {
 #[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using farmhash's fingerprint128, skipping NULL values
 pub fn checksum_farmhash_extendable(a: VariadicArray<String>) -> Uuid {
-    assert!(a.len() % 2 == 0);
+    assert!(a.len().is_multiple_of(2));
     let b = normalized_pairs_bytes(a.iter(), filter_and_join_tuple);
     farmhash_fingerprint(b)
 }
@@ -75,7 +75,7 @@ pub fn checksum_farmhash_extendable(a: VariadicArray<String>) -> Uuid {
 #[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using seahash.
 pub fn checksum_seahash(a: VariadicArray<String>) -> i64 {
-    assert!(a.len() % 2 == 0);
+    assert!(a.len().is_multiple_of(2));
     let b = normalized_pairs_bytes(a.iter(), filter_and_join_tuple_keep_null_values);
     seahash_fingerprint(b)
 }
@@ -83,7 +83,7 @@ pub fn checksum_seahash(a: VariadicArray<String>) -> i64 {
 #[pg_extern(strict, immutable, parallel_safe, create_or_replace)]
 /// Hash a variadic array of pairs key, value of strings into a Uuid using seahash, skipping NULL values.
 pub fn checksum_seahash_extendable(a: VariadicArray<String>) -> i64 {
-    assert!(a.len() % 2 == 0);
+    assert!(a.len().is_multiple_of(2));
     let b = normalized_pairs_bytes(a.iter(), filter_and_join_tuple);
     seahash_fingerprint(b)
 }
