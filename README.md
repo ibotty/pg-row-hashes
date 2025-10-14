@@ -14,3 +14,9 @@ It provides [seahash](https://ticki.github.io/blog/seahash-explained/) and [farm
 Seahash will return a `BIGINT` (64 bit) and Farmhash a `UUID` (128 bit).
 
 It also provides a `bit_xor` aggregate for `UUID`.
+
+## Consuming the extension
+
+There is a debian package published on <https://github.com/ibotty/postgresql-related-packages>.
+
+It also publishes a container image to be consumed with the [image volume extensions](https://cloudnative-pg.io/documentation/1.27/imagevolume_extensions/) with the CNPG operator on kubernetes.
