@@ -1,0 +1,260 @@
+name: Build pg_row_hashes Extension
+
+env:
+  EXTENSION_NAME: pg_row_hashes
+  SCCACHE_GHA_ENABLED: "true"
+  PG_VERSION: "18"
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      extension_version:
+        required: false
+        type: string
+      # pg-version:
+      #   required: false
+      #   type: string
+      #   default: "18"
+      # distro:
+      #   required: false
+      #   type: string
+      #   default: "bookworm"
+  workflow_call:
+    inputs:
+      extension_version:
+        required: false
+        type: string
+      # pg-version:
+      #   required: false
+      #   type: string
+      #   default: "18"
+      # distro:
+      #   required: false
+      #   type: string
+      #   default: "bookworm"
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+      # actions: write
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: metalbear-co/sccache-action@v1.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install apt packages
+        run: |
+          set -x
+
+          echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
+
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends git build-essential libpq-dev curl libreadline6-dev zlib1g-dev pkg-config cmake libreadline-dev zlib1g-dev flex bison libxml2-dev libxslt-dev libssl-dev libxml2-utils xsltproc ccache clang libclang-dev gcc tree liblz4-dev libcurl4-openssl-dev libzstd-dev
+
+          sudo apt install -y postgresql-$PG_VERSION postgresql-server-dev-$PG_VERSION
+
+          sudo chmod a+rwx $(/usr/lib/postgresql/$PG_VERSION/bin/pg_config --pkglibdir) $(/usr/lib/postgresql/$PG_VERSION/bin/pg_config --sharedir)/extension /var/run/postgresql/
+
+      - name: Install pgrx
+        run: |
+          pgrx_version="$(cargo tree |grep  ' pgrx ' |head -n 1 | cut -f2 -dv )"
+          cargo install cargo-pgrx --version "$pgrx_version" --locked
+          cargo pgrx init --pg$PG_VERSION=/usr/lib/postgresql/$PG_VERSION/bin/pg_config
+
+      - name: Build release artifacts
+        run: |
+          set -x
+          cargo pgrx package --no-default-features --features pg$PG_VERSION
+          
+      - name: Fixup schema
+        run: |
+          EXTENSION_VERSION="$(grep '^version ' Cargo.toml | cut -f2 -d'"')"
+          sql_schema_filename="${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
+          sql_schema_file="$(find target/release -name "$sql_schema_filename" | head -n1)"
+
+          sed -i 's/CREATE AGGREGATE/CREATE OR REPLACE AGGREGATE/' "$sql_schema_file"
+
+      - name: Build and push
+        run: |
+          export REGISTRY="ghcr.io/${{ github.repository_owner }}"
+          export EXTENSION_VERSION="$(grep '^version ' Cargo.toml | cut -f2 -d'"')"
+          echo "Using EXTENSION_VERSION=$EXTENSION_VERSION"
+
+          # Choose target and set variables based on branch
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            # Build all combinations for main branch
+            docker buildx bake \
+              --set '*.dockerfile=../../../Dockerfile' \
+              --set "*.context=target/release/${EXTENSION_NAME}-pg$PG_VERSION" \
+              --set "*.args.EXTENSION_VERSION=${EXTENSION_VERSION}" \
+              extension-all \
+              --push
+          else
+            # Build single combination for feature branch
+            TARGET="extension-feature"
+            export DISTRO=bookworm
+            export BRANCH_NAME="${{ github.ref_name }}"
+
+            docker buildx bake \
+              --set '*.dockerfile=../../../Dockerfile' \
+              --set "*.context=target/release/${EXTENSION_NAME}-pg$PG_VERSION" \
+              --set "*.args.PG_VERSION=$PG_VERSION" \
+              --set "*.args.DISTRO=$DISTRO" \
+              --set "*.args.EXTENSION_VERSION=${EXTENSION_VERSION}" \
+              ${TARGET} \
+              --push
+          fi
+            
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Get version from build
+        id: get-version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && ! [ "${{ inputs.extension-version }}" = "" ]; then
+            echo "version=${{ inputs.extension-version }}" >> $GITHUB_OUTPUT
+          else
+            LATEST="$(grep '^version ' Cargo.toml | cut -f2 -d'"')"
+            echo "version=${LATEST}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Setup Kind Cluster
+        uses: helm/kind-action@v1
+        with:
+          version: v0.30.0
+          kubectl_version: v1.34.0
+          node_image: kindest/node:v1.34.0
+          config: kind-config.yaml
+
+
+      # - name: Check Kind Cluster Status
+      #   run: |
+      #     echo "Kind cluster 'kind' is ready."
+      #     kubectl cluster-info
+      #     kubectl get nodes
+          
+      - name: Install CloudNativePG Operator
+        run: |
+          # Get latest CNPG release
+          CNPG_VERSION=$(curl -s https://api.github.com/repos/cloudnative-pg/cloudnative-pg/releases/latest | jq -r '.tag_name')
+          echo "Installing CloudNativePG operator version: ${CNPG_VERSION}"
+          
+          # Extract version without 'v' prefix for branch name
+          BRANCH_VERSION=$(echo ${CNPG_VERSION} | sed 's/^v//' | cut -d. -f1,2)
+          
+          # Install CNPG operator using correct URL format
+          kubectl apply --server-side -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-${BRANCH_VERSION}/releases/cnpg-${CNPG_VERSION#v}.yaml
+          
+      - name: Verify CNPG Operator Installation
+        run: |
+          # Wait for operator deployment to be ready
+          kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=120s
+          
+          # Check operator status
+          kubectl get pods -n cnpg-system
+          kubectl get deployment -n cnpg-system
+          
+          # Verify CRDs are installed
+          kubectl get crd | grep postgresql
+          
+          echo "✅ CloudNativePG operator installed successfully"
+
+      - name: Create Postgres Cluster with Extension
+        run: |
+          DISTRO=bookworm
+          EXTENSION_VERSION="${{ steps.get-version.outputs.version }}"
+          
+          # Set image tag based on branch
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${EXTENSION_NAME}:${PG_VERSION}-${EXTENSION_VERSION}-${DISTRO}"
+          else
+            IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${EXTENSION_NAME}:${PG_VERSION}-${EXTENSION_VERSION}-${{ github.ref_name }}-${DISTRO}"
+          fi
+          
+          echo "Testing with image: ${IMAGE_TAG}"
+          
+          # Create test pod with pg_row_hashes extension
+          kubectl apply -f - <<EOF
+          apiVersion: postgresql.cnpg.io/v1
+          kind: Cluster
+          metadata:
+            name: postgresql-with-extensions
+            namespace: cnpg-system
+          spec:
+            instances: 1
+            imageName: ghcr.io/cloudnative-pg/postgresql:${PG_VERSION}-${DISTRO}
+            bootstrap:
+              initdb:
+                database: app
+                postInitSQL:
+                - CREATE EXTENSION ${EXTENSION_NAME};
+            postgresql:
+              extensions:
+                - name: pg-row-hashes
+                  image:
+                    reference: ${IMAGE_TAG}
+            storage:
+              storageClass: standard
+              size: 1Gi
+          EOF
+          if  ! kubectl wait --for=jsonpath='{.status.phase}=Cluster in healthy state' cluster/postgresql-with-extensions --timeout=300s -n cnpg-system; then
+            POD_NAME="postgresql-with-extensions-1"
+            set -x
+            kubectl -n cnpg-system logs $POD_NAME || true
+            kubectl -n cnpg-system describe pod $POD_NAME || true
+            false
+          fi
+          echo "✅ PostgreSQL cluster with ${EXTENSION_NAME} extension is ready"
+          
+      - name: Verify pg_row_hashes Extension
+        run: |
+          NAMESPACE="cnpg-system"
+          POD_NAME="postgresql-with-extensions-1"
+          CONTAINER_NAME="postgres"
+          
+          echo "🔍 Checking if ${EXTENSION_NAME} extension is available..."
+          
+          # Wait a bit for the extension to be fully loaded
+          sleep 10
+          
+          # Check if extension is available in pg_available_extensions
+          if kubectl exec "$POD_NAME" -n "$NAMESPACE" -c "$CONTAINER_NAME" -- sh -c \
+             "psql -U postgres -d postgres -t -c \"SELECT name FROM pg_available_extensions WHERE name = '$EXTENSION_NAME';\"" | \
+             grep -q "$EXTENSION_NAME"; then
+              echo "✅ Success! The '$EXTENSION_NAME' extension is available."
+          else
+              echo "❌ Failure! The '$EXTENSION_NAME' extension was NOT found in pg_available_extensions."
+          fi
+          
+      # - name: Tag successful build
+      #   if: success() && github.ref == 'refs/heads/main'
+      #   run: |
+      #     git tag "${EXTENSION_NAME}-${{ steps.get-version.outputs.version }}"
+      #     git push origin "${EXTENSION_NAME}-${{ steps.get-version.outputs.version }}"
