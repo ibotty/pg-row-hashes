@@ -13,23 +13,20 @@ path = "./src/bin/pgrx_embed.rs"
 
 [features]
 default = ["pg18"]
-pg15 = ["pgrx/pg15", "pgrx-tests/pg15" ]
-pg16 = ["pgrx/pg16", "pgrx-tests/pg16" ]
-pg17 = ["pgrx/pg17", "pgrx-tests/pg17" ]
 pg18 = ["pgrx/pg18", "pgrx-tests/pg18" ]
 pg_test = []
 
 [dependencies]
 bytes = "1"
 fasthash = "0.4.0"
-itertools = "0.14.0"
+itertools = "0.15.0"
 md5 = "0.8.0"
-pgrx = "=0.16"
+pgrx = "=0.18"
 seahash = "4.1.0"
 serde = "1.0.196"
 
 [dev-dependencies]
-pgrx-tests = "=0.16"
+pgrx-tests = "=0.18"
 
 [profile.dev]
 panic = "unwind"
